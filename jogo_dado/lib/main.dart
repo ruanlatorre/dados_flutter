@@ -161,69 +161,120 @@ class _EstadoTelaJogoDados extends State<TelaJogoDados> {
     3: 'https://i.imgur.com/hjqY13x.png&#39',
     4: 'https://i.imgur.com/CfJnQt0.png&#39',
     5: 'https://i.imgur.com/6oWpSbf.png&#39',
-    6: 'https://i.imgur.com/drgfo7s.png&#39S',
+    6: 'https://i.imgur.com/drgfo7s.png&#39',
   };
-  //Lógica da pontuacao: verifica combinações para aplicar os multiplicadores
+
+  // Logica da pontuação: verifica o bolo de chocolate + cobertura para aplicar ao forno
   int _calcularPontuacao(List<int> lancamentos) {
-    //Percorre toda a lista e soma tudo
+    // percorre toda a lista de lançamentos e soma os valores
     final soma = lancamentos.reduce((a, b) => a + b);
-    //[4,4,1] > 4 + 4 + 1 = 9
-    final valoresUnicos = lancamentos.toSet().length;
+    // [4, 4, 1] => 9 4+4 = 8 + 1 = 9
+    final valoresUnicos = lancamentos
+        .toSet()
+        .length; // Converte a lista em um conjunto para obter valores únicos
     //toSet remove repetidos
-    if (valoresUnicos == 1) { //Ex: [5, 5, 5] Tres iguais = 3x a soma
-      return soma * 3;
-    } else if (valoresUnicos == 2) { //Ex: [4, 4, 1] 2 iguais = 2x a soma
-      return soma * 2;
-    } else {//Ex: [1, 3, 6] todos diferentes = soma pura
-      return soma;
+    switch (valoresUnicos) {
+      case 1:
+        // Trinca (todos os valores iguais exemplo: 4,4,4)
+        return soma * 3; // Bônus de 6 pontos
+      case 2:
+        // Dupla (dois valores iguais e um diferente exemplo: 4,4,1)
+        return soma * 2; // Bônus de 3 pontos
+      default:
+        // Todos os valores diferentes exemplo: 4,2,6
+        return soma; // Sem bônus
     }
   }
-  //Chamada pelo botao para lancar os dados
-  void _lancarDados() { //Se  eu uso o sublinhado _ significa que ela é privada, só pode ser usada dentro da classe
-    setState(() {
-      //Comando crucial para forçar a atualizacao da tela.
-      _lancamentosJogador1 = List.generate(3, (_) => _aleatorio.nextInt(6) + 1);
-      _lancamentosJogador2 = List.generate(3, (_) => _aleatorio.nextInt(6) + 1);
-      
-      final pontuacao1 = _calcularPontuacao(_lancamentosJogador1);
-      final pontuacao2 = _calcularPontuacao(_lancamentosJogador2);
 
-      if (pontuacao1 > pontuacao2) {
-        _mensagemResultado = '${widget.nomeJogador1} venceu! ($pontuacao1 x $pontuacao2)';
-      } else if (pontuacao2 > pontuacao1) {
-        _mensagemResultado = '${widget.nomeJogador2} venceu! ($pontuacao2 x $pontuacao1)';
+  // Função para lançar os dados e atualizar o estado do jogo
+  void _lancarDados() {
+    //eu uso o sublinhado _ sginifica que ela é orivada, só pode ser usada dentro dessa clase
+    setState(() {
+      //tipo o document get element by id do DOM, ele avisa o flutter que algo mudou e ele precisa redesenhar a tela
+      // Gera 3 números aleatórios entre 1 e 6 para cada jogador
+      _lancamentosJogador1 = List.generate(3, (int index) => _aleatorio.nextInt(6) + 1);
+      _lancamentosJogador2 = List.generate(3, (int index) => _aleatorio.nextInt(6) + 1);
+
+      // Calcula as pontuações dos jogadores
+      final pontuacaoJogador1 = _calcularPontuacao(_lancamentosJogador1);
+      final pontuacaoJogador2 = _calcularPontuacao(_lancamentosJogador2);
+
+      // Determina o resultado do jogo
+      if (pontuacaoJogador1 > pontuacaoJogador2) {
+        _mensagemResultado =
+            '${widget.nomeJogador1} vence com $pontuacaoJogador1 pontos!';
+      } else if (pontuacaoJogador2 > pontuacaoJogador1) {
+        _mensagemResultado =
+            '${widget.nomeJogador2} vence com $pontuacaoJogador2 pontos!';
       } else {
-        _mensagemResultado = 'Empate, jogue novamente!';
+        _mensagemResultado = 'Empate com $pontuacaoJogador1 pontos cada!';
       }
     });
   }
 
-
-  //Declara a funcao que devolve um widget: recebe nome jogador, lancamentos: os 3 valores do dado.
-  Widget _construirColunaJogador(String nome, List<int> lancamentos) {
-    return Expanded( //Pega todo o espaço disponivel dentro de uma linha ou column
+  // declara a função e devolve um widget recebe nome jogador, lançamentos no caso os 3 valores do dado
+  Widget _contruirColunaJogador(String nome, List<int> lancamentos) {
+    return Expanded(
+      //pega todos o espaço disponivel dentro de um row ou column
       child: Column(
         children: [
-          Text(nome, style: const TextStyle(fontStyle: 18, fontWeight: FontWeight.bold)),
+          Text(
+            nome,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center, //Justify-content: center
-            children: [
-              lancamentos.map((valor) => {
-                //Map transforma o numero do dado em um widget de imagem
-                return Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Image.network(
-                    imagensDados[valor]!, //Pega a url do mapa usando o valor do dado
-                    width: 50,
-                    height: 50,
-                    errorBuilder: (context, erro, StackTrace) => const Icon(Icons.error, size: 40),
+            mainAxisAlignment:
+                MainAxisAlignment.center, // é o justify content do css
+            children: lancamentos
+                // transforma o numero do dado em uma widget de imagem
+                .map(
+                  (valor) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.network(
+                      imagensDados[valor]!, //pega a url do mapa usando o valor do dado
+                      width: 50,
+                      height: 50,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error, size: 40);
+                      },
+                    ),
                   ),
-                );
-              }),
-            ],
+                )
+                .toList(), //converte o resultado do map em uma lista de widgets
           ),
         ],
-      )
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Jogo de Dados')),
+      body: Column(
+        children: [
+          Row(
+            children: [
+              // Constrói a coluna do jogador 1
+              _contruirColunaJogador(widget.nomeJogador1, _lancamentosJogador1),
+              // Constrói a coluna do jogador 2
+              _contruirColunaJogador(widget.nomeJogador2, _lancamentosJogador2),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            _mensagemResultado,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _lancarDados,
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+            child: Text('Jogar dados'),
+          ) //Empurra o botão para a parte de baixo da tela
+        ],
+      ),
     );
   }
 }
